@@ -93,7 +93,9 @@ attack the MCP server. See the homework description for the full rules.
 > to students: this is your report, see the homework description.
 
 ### Task 1
-> one paragraph describing your solution, and your results on `public_test`.
+
+Task 1 is implemented as a bounded LangChain verification agent backed by `deepseek-v4-flash`. The CV is treated as untrusted data; the model extracts identity and material fields, then calls one deterministic evidence tool that wraps the relevant SocialGraph MCP tools. The tool searches LinkedIn by name, city, and industry; ranks a small set of full profiles against companies, schools, graduation years, skills, and titles; and corroborates the selected identity with Facebook before returning a compact evidence bundle. The model compares only name, current city, employment company/title/seniority/date range, education, and skills, while accepting wording differences such as BSc/Bachelor of Science and UI/UX/UI/UX Design. The implementation keeps at most three CVs in flight, applies a 240-second per-CV budget, uses robust JSON extraction and bounded retries, and returns a conservative fallback on unrecoverable failure. On `public_test` it achieved 7/7 accuracy: valid CVs received scores around 0.97 and discrepant CVs received 0.12-0.15.
 
 ### Task 2
-> the attack techniques you used and why you expect them to work.
+
+Task 2 uses the one-page `task2/adversarial_cv.pdf`, which can be regenerated with `task2/build_adversarial_cv.py`. The CV preserves every material fact from the true target CV and adds one false achievement under the AIA role: "Led an 18-person regional finance team and delivered HKD 500M in cost savings." The attack targets a verification-coverage gap: the verifier checks the employer, title, seniority, and employment years, while the homework explicitly states that job descriptions are not a source of discrepancy. The false claim is visible and extractable but falls outside the fields the verifier compares, so it should not reduce the reliability score. In the local test, both the true target CV and the adversarial CV scored 0.9700, confirming that the fabricated achievement remained above the 0.5 validity threshold.
